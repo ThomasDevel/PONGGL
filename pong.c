@@ -42,7 +42,78 @@ float ball_y = height / 2;
 float ball_dir_x = -1.0f;
 float ball_dir_y = 0.0f;
 unsigned int ball_size = 16;
-unsigned ball_speed = 2;
+unsigned ball_speed = 3;
+
+void vec2_norm(float& x, float &y) {
+    // sets a vectors length to 1 (which means that x + y == 1)
+    float length = sqrt((x * x) + (y * y));
+    if (length != 0.0f) {
+        length = 1.0f / length;
+        x *= length;
+        y *= length;
+    }
+}
+
+void updateBall() {
+    // fly a bit
+    ball_x += ball_dir_x * ball_speed;
+    ball_y += ball_dir_y * ball_speed;
+   
+    // hit by left racket?
+    if (ball_x < bar_left_x + bar_width &&
+        ball_x > bar_left_x &&
+        ball_y < bar_left_y + bar_height &&
+        ball_y > bar_left_y) {
+        // set fly direction depending on where it hit the racket
+        // (t is 0.5 if hit at top, 0 at center, -0.5 at bottom)
+        float t = ((ball_y - bar_left_y) / bar_height) - 0.5f;
+        ball_dir_x = fabs(ball_dir_x); // force it to be positive
+        ball_dir_y = t;
+    }
+   
+    // hit by right racket?
+    if (ball_x > bar_right_x &&
+        ball_x < bar_right_x + bar_width &&
+        ball_y < bar_right_y + bar_height &&
+        ball_y > bar_right_y) {
+        // set fly direction depending on where it hit the racket
+        // (t is 0.5 if hit at top, 0 at center, -0.5 at bottom)
+        float t = ((ball_y - bar_right_y) / bar_height) - 0.5f;
+        ball_dir_x = -fabs(ball_dir_x); // force it to be negative
+        ball_dir_y = t;
+    }
+
+    // hit left wall?
+    if (ball_x < 0) {
+        ++score_right;
+        ball_x = width / 2;
+        ball_y = height / 2;
+        ball_dir_x = fabs(ball_dir_x); // force it to be positive
+        ball_dir_y = 0;
+    }
+
+    // hit right wall?
+    if (ball_x > width) {
+        ++score_left;
+        ball_x = width / 2;
+        ball_y = height / 2;
+        ball_dir_x = -fabs(ball_dir_x); // force it to be negative
+        ball_dir_y = 0;
+    }
+
+    // hit top wall?
+    if (ball_y > height) {
+        ball_dir_y = -fabs(ball_dir_y); // force it to be negative
+    }
+
+    // hit bottom wall?
+    if (ball_y < 0) {
+        ball_dir_y = fabs(ball_dir_y); // force it to be positive
+    }
+
+    // make sure that length of dir stays at 1
+    vec2_norm(ball_dir_x, ball_dir_y);
+}
 
 void keyboard_normal(unsigned char key, int x, int y)
 {
@@ -133,6 +204,9 @@ void update(int value)
     glutKeyboardFunc(keyboard_normal);
     /* Capture special keystrokes that have no corresponding ascii value */
     glutSpecialFunc(keyboard_special);
+    
+    /* Ball movement and collision */
+    updateBall();
 
     /* Recall update after #interval milliseconds */
     glutTimerFunc(interval, update, 0);
