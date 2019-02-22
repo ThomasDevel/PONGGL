@@ -3,6 +3,12 @@
 #include<GL/glut.h>
 #include<string.h>
 
+/* Ascii keyboard codes */
+#define VK_W    0x77
+#define VK_S    0x73
+#define VK_UP   0x48
+#define VK_DOWN 0x50
+
 /* Dimensions of window */
 int width = 1000;
 int height = 400;
@@ -30,6 +36,18 @@ float bar_left_y = 50.0f;
 
 float bar_right_x = width - bar_width - 20;
 float bar_right_y = 50.0f;
+
+void keyboard_normal(unsigned char key, int x, int y)
+{
+    if (key == VK_W ) { bar_left_y += bar_speed; }
+    if (key == VK_S ) { bar_left_y -= bar_speed; }
+}
+
+void keyboard_special(int key, int x, int y)
+{
+    if (key == GLUT_KEY_UP )   { bar_right_y += bar_speed; }
+    if (key == GLUT_KEY_DOWN ) { bar_right_y -= bar_speed; }
+}
 
 void drawRect(float x, float y, float width, float height)
 {
@@ -82,6 +100,13 @@ void draw(void)
 
 void update(int value)
 {
+    /* User input handling */ 
+    /* Capture keystrokes to their ascii value */
+    glutKeyboardFunc(keyboard_normal);
+    /* Capture special keystrokes that have no corresponding ascii value */
+    glutSpecialFunc(keyboard_special);
+
+    /* Recall update after #interval milliseconds */
     glutTimerFunc(interval, update, 0);
 
     /* Redisplay frames */
