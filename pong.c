@@ -2,12 +2,11 @@
 #include<stdlib.h>
 #include<GL/glut.h>
 #include<string.h>
+#include<math.h>
 
 /* Ascii keyboard codes */
 #define VK_W    0x77
 #define VK_S    0x73
-#define VK_UP   0x48
-#define VK_DOWN 0x50
 
 /* Dimensions of window */
 int width = 1000;
@@ -18,7 +17,7 @@ int interval = 1000 / 60;
 
 /* Score of left and right player and the string in
  * which we will write and output the score to the screen.
-*/
+ */
 int score_left = 0;
 int score_right = 0;
 char score_string[256];
@@ -37,6 +36,14 @@ float bar_left_y = 50.0f;
 float bar_right_x = width - bar_width - 20;
 float bar_right_y = 50.0f;
 
+/* Ball variables */
+float ball_x = width /2;
+float ball_y = height / 2;
+float ball_dir_x = -1.0f;
+float ball_dir_y = 0.0f;
+unsigned int ball_size = 16;
+unsigned ball_speed = 2;
+
 void keyboard_normal(unsigned char key, int x, int y)
 {
     if (key == VK_W ) { bar_left_y += bar_speed; }
@@ -47,6 +54,23 @@ void keyboard_special(int key, int x, int y)
 {
     if (key == GLUT_KEY_UP )   { bar_right_y += bar_speed; }
     if (key == GLUT_KEY_DOWN ) { bar_right_y -= bar_speed; }
+}
+
+void drawCircle(float x, float y, float radius)
+{
+    /* number of points to 'represent' a circle */
+    unsigned int triangles = 16; 
+
+    float twicePi = 2.0f * M_PI;
+
+    glBegin(GL_TRIANGLE_FAN);
+        /* Center of the circle */
+        glVertex2f(x, y);
+        for(i = 0; i <= triangles; i++) { 
+            glVertex2f( x + (radius * cos(i *  twicePi / triangles)), 
+                        y + (radius * sin(i * twicePi / triangles)));
+        }
+    glEnd();
 }
 
 void drawRect(float x, float y, float width, float height)
@@ -81,7 +105,7 @@ void draw(void)
      *
      * GL_COLOR_BUFFER_BIT: Indicates the buffers currently enabled for color writing.
      * GL_DEPTH_BUFFER_BIT: Indicates the depth buffer.
-    */
+     */
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     /* Replace the current matrix with the identity matrix */
     glLoadIdentity();
@@ -89,6 +113,10 @@ void draw(void)
     /* Draw player bars */
     drawRect(bar_left_x, bar_left_y, bar_width, bar_height);
     drawRect(bar_right_x, bar_right_y, bar_width, bar_height);
+    
+    /* Draw the ball */
+    drawCircle(ball_x - ball_size / 2, ball_y - ball_size / 2, bar_width / 2);
+    
 
     /* draw score text */
     sprintf(score_string, "%d : %d", score_left, score_right);
@@ -116,9 +144,16 @@ void update(int value)
 void enable2D(int width, int height)
 {
     glViewport(0, 0, width, height);
+    /* GL_PROJECTION: Applies subsequent matrix operations to projection
+     * matrix stack.
+     */
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
+    /* Multiply current matrix with an orthographic matrix */
     glOrtho(0.0f, width, 0.0f, height, 0.0f, 1.0f);
+    /* GL_MODELVIEW: Applies subsequent matrix operations to modelview
+     * matrix stack.
+     */
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 }
