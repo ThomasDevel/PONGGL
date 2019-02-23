@@ -5,12 +5,12 @@
 #include<math.h>
 
 /* Ascii keyboard codes */
-#define VK_W    0x77
-#define VK_S    0x73
+#define VK_W    (0x77)
+#define VK_S    (0x73)
 
 /* Dimensions of window */
-int width = 1000;
-int height = 400;
+#define WIDTH 1000
+#define HEIGHT 400
 
 /* (1000ms / 60 fps) -> framerate */
 int interval = 1000 / 60;
@@ -33,24 +33,24 @@ int bar_speed = 3;
 float bar_left_x = 20.0f;
 float bar_left_y = 50.0f;
 
-float bar_right_x = width - bar_width - 20;
+float bar_right_x = WIDTH - bar_width - 20;
 float bar_right_y = 50.0f;
 
 /* Ball variables */
-float ball_x = width /2;
-float ball_y = height / 2;
+float ball_x = WIDTH /2;
+float ball_y = HEIGHT / 2;
 float ball_dir_x = -1.0f;
 float ball_dir_y = 0.0f;
-unsigned int ball_size = 16;
+unsigned int ball_size = 20;
 unsigned ball_speed = 3;
 
-void vec2_norm(float& x, float &y) {
+void vec2_norm(float *x, float *y) {
     // sets a vectors length to 1 (which means that x + y == 1)
-    float length = sqrt((x * x) + (y * y));
+    float length = sqrt(((*x) *(*x)) + ((*y) * (*y)));
     if (length != 0.0f) {
         length = 1.0f / length;
-        x *= length;
-        y *= length;
+        *x *= length;
+        *y *= length;
     }
 }
 
@@ -58,9 +58,9 @@ void updateBall() {
     // fly a bit
     ball_x += ball_dir_x * ball_speed;
     ball_y += ball_dir_y * ball_speed;
-   
+
     // hit by left racket?
-    if (ball_x < bar_left_x + bar_width &&
+    if (ball_x < bar_left_x + (bar_width*2) &&
         ball_x > bar_left_x &&
         ball_y < bar_left_y + bar_height &&
         ball_y > bar_left_y) {
@@ -70,7 +70,7 @@ void updateBall() {
         ball_dir_x = fabs(ball_dir_x); // force it to be positive
         ball_dir_y = t;
     }
-   
+
     // hit by right racket?
     if (ball_x > bar_right_x &&
         ball_x < bar_right_x + bar_width &&
@@ -86,45 +86,63 @@ void updateBall() {
     // hit left wall?
     if (ball_x < 0) {
         ++score_right;
-        ball_x = width / 2;
-        ball_y = height / 2;
+        ball_x = WIDTH / 2;
+        ball_y = HEIGHT / 2;
         ball_dir_x = fabs(ball_dir_x); // force it to be positive
         ball_dir_y = 0;
     }
 
     // hit right wall?
-    if (ball_x > width) {
+    if (ball_x > WIDTH) {
         ++score_left;
-        ball_x = width / 2;
-        ball_y = height / 2;
+        ball_x = WIDTH / 2;
+        ball_y = HEIGHT / 2;
         ball_dir_x = -fabs(ball_dir_x); // force it to be negative
         ball_dir_y = 0;
     }
 
     // hit top wall?
-    if (ball_y > height) {
+    if (ball_y > HEIGHT) {
         ball_dir_y = -fabs(ball_dir_y); // force it to be negative
     }
 
     // hit bottom wall?
-    if (ball_y < 0) {
+    if (ball_y < bar_width) {
         ball_dir_y = fabs(ball_dir_y); // force it to be positive
     }
 
     // make sure that length of dir stays at 1
-    vec2_norm(ball_dir_x, ball_dir_y);
+    vec2_norm(&ball_dir_x, &ball_dir_y);
 }
 
 void keyboard_normal(unsigned char key, int x, int y)
 {
-    if (key == VK_W ) { bar_left_y += bar_speed; }
-    if (key == VK_S ) { bar_left_y -= bar_speed; }
+    if (key == VK_W ) {
+        if(bar_left_y < HEIGHT - bar_height) {
+            bar_left_y += bar_speed;
+        }
+    }
+
+    if (key == VK_S ) {
+        if(bar_left_y > 0) {
+            bar_left_y -= bar_speed;
+        }
+    }
 }
 
 void keyboard_special(int key, int x, int y)
 {
-    if (key == GLUT_KEY_UP )   { bar_right_y += bar_speed; }
-    if (key == GLUT_KEY_DOWN ) { bar_right_y -= bar_speed; }
+    if (key == GLUT_KEY_UP ) {
+        if(bar_right_y < HEIGHT - bar_height) {
+            bar_right_y += bar_speed;
+        }
+    }
+
+    if (key == GLUT_KEY_DOWN ) {
+        if(bar_right_y > 0) {
+            bar_right_y -= bar_speed;
+        }
+    }
 }
 
 void drawCircle(float x, float y, float radius)
@@ -137,8 +155,8 @@ void drawCircle(float x, float y, float radius)
     glBegin(GL_TRIANGLE_FAN);
         /* Center of the circle */
         glVertex2f(x, y);
-        for(i = 0; i <= triangles; i++) { 
-            glVertex2f( x + (radius * cos(i *  twicePi / triangles)), 
+        for(i = 0; i <= triangles; i++) {
+            glVertex2f( x + (radius * cos(i *  twicePi / triangles)),
                         y + (radius * sin(i * twicePi / triangles)));
         }
     glEnd();
@@ -184,14 +202,14 @@ void draw(void)
     /* Draw player bars */
     drawRect(bar_left_x, bar_left_y, bar_width, bar_height);
     drawRect(bar_right_x, bar_right_y, bar_width, bar_height);
-    
+
     /* Draw the ball */
     drawCircle(ball_x - ball_size / 2, ball_y - ball_size / 2, bar_width / 2);
-    
+
 
     /* draw score text */
     sprintf(score_string, "%d : %d", score_left, score_right);
-    drawText(width / 2 - 10, height - 30, score_string);
+    drawText(WIDTH / 2 - 10, HEIGHT - 30, score_string);
 
     /* Swap buffers of current window if double buffered */
     glutSwapBuffers();
@@ -204,7 +222,7 @@ void update(int value)
     glutKeyboardFunc(keyboard_normal);
     /* Capture special keystrokes that have no corresponding ascii value */
     glutSpecialFunc(keyboard_special);
-    
+
     /* Ball movement and collision */
     updateBall();
 
@@ -237,7 +255,7 @@ int main(int argc, char *argv[])
     /* initialze opengl via glut */
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-    glutInitWindowSize(width, height);
+    glutInitWindowSize(WIDTH, HEIGHT);
     glutCreateWindow("PONG GAME");
 
     /* Register callback functions */
@@ -245,7 +263,7 @@ int main(int argc, char *argv[])
     glutTimerFunc(interval, update, 0);
 
     /* 2d mode scene setup */
-    enable2D(width, height);
+    enable2D(WIDTH, HEIGHT);
     /* color to draw */
     glColor3f(1.0f, 1.0f, 1.0f);
 
