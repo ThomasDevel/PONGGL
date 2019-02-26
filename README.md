@@ -4,7 +4,7 @@ This implementation is done to learn about using OpenGL
 and a multimedia library, such as freeglut and SDL.
 
 On Windows compile with:
-g++ -O2 pong.c -Wall -Wextra -lglut32 -lglu32 -lopengl32 -o pong
+g++ -O2 pong.c -o pong -Wall -Wextra -lglut32 -lglu32 -lopengl32 -lm
 
 
 TO DO:
